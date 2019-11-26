@@ -3,7 +3,6 @@ require_relative 'door.rb'
 class Game
   attr_reader :end_choice
   attr_reader :end_door
-  attr_reader :revealed
   attr_reader :doors
   attr_reader :choice
   
@@ -22,35 +21,46 @@ class Game
   end
   
   def reveal_goat
-    @revealed = rand(@doors.length)
-    if ((@revealed.eql? @choice) || (@doors[@revealed].entity.eql? "car"))
-      reveal_goat
+    revealed_total = 0
+    @doors.each_with_index do |door, i|
+      break unless revealed_total < (@doors.length - 2)
+      
+      if ((i.eql? @choice) || (door.entity.eql? "car"))
+        next
+      else
+        door.revealed = true
+        revealed_total += 1
+      end
     end
   end
   
   #stay or switch
   def decide(decision)
+    @end_choice = nil
     if decision.eql?("stay")
       @end_choice = @choice
-      @end_door = @doors[@end_choice]
-      return
     elsif decision.eql?("switch")
-      original_choice = @choice
-      while (@choice.eql?(original_choice) || @choice.eql?(@revealed)) do
-        @choice = rand(@doors.length)
+      @doors.each_with_index do |door, i|
+        if ((i == @choice) || (door.revealed))
+          next
+        else
+          @end_choice = i
+          break
+        end
+        puts i
+
       end
-      @end_choice = @choice
-      @end_door = @doors[@end_choice]
     else
       raise ArgumentError("Stay or switch please")
     end
+    @end_door = @doors[@end_choice]
   end
   
   def build_doors_int(number)
     @doors = Array.new
-    car = rand(number)
+    @car = rand(number)
     number.times { |num| 
-      if num.eql? car
+      if num.eql? @car
         @doors[num] = Door.new("car")
       else
         @doors[num] = Door.new("goat")

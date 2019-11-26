@@ -18,15 +18,22 @@ describe "game" do
     expect(@game.goat_count).to eq(total - 1)
   end
   
-  it "should not reveal choie" do
+  it "should not reveal choice" do
     @game.reveal_goat
-    expect(@game.revealed).not_to eq(@game.choice)
+    @game.doors.each_with_index do |door, i|
+      if door.revealed
+        expect(i).not_to eq(@game.choice)              
+      end
+    end
   end
   
-  it "should reveal goat" do
+  it "should reveal only goats" do
     @game.reveal_goat
-    revealed_entity = @game.doors[@game.revealed].entity
-    expect(revealed_entity).to eq("goat")
+    @game.doors.each_with_index do |door, i|
+      if door.revealed
+        expect(door.entity).to eq("goat")
+      end
+    end    
   end
   
   context "stay scenario with reveal" do
@@ -48,7 +55,7 @@ describe "game" do
       expect(@game.end_choice).not_to eq(0)
     end
     it "has the end choice not the same as revealed goat" do
-      expect(@game.end_choice).not_to eq(@game.revealed)
+      expect(@game.end_door.revealed).to eq(false)
     end
   end
   
@@ -102,6 +109,35 @@ describe "picked goat game" do
       @game.decide("switch")
       door = @game.end_door
       expect(door.entity).to eq("car")
+    end
+  end
+end
+
+describe "game with 100 doors" do
+  before :each do
+    @game = Game.new(100)
+    @game.choose(10)
+  end
+
+  context "goats have been revealed" do
+    before :each do
+      @game.reveal_goat
+    end
+
+    it "should have 98 revealed doors" do
+      revealed = 0
+      @game.doors.each do |door|
+        revealed += 1 if door.revealed
+      end
+      expect(revealed).to eq(98)
+    end
+
+    it "should have all revealed doors be goats" do
+      @game.doors.each do |door|
+        if door.revealed
+          expect(door.entity).to eq("goat")
+        end
+      end
     end
   end
 end
